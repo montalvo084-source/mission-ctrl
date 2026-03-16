@@ -249,6 +249,33 @@ export function useGameState() {
     return result;
   }, [today, settings]);
 
+  /** Reset a break timer back to idle. Deducts XP if it was previously returned on-time. */
+  const resetBreak = useCallback((breakId) => {
+    setDailyLogs(prev => {
+      const entry = prev[today] || makeDayEntry();
+      const oldBreak = entry.breaks[breakId];
+
+      if (oldBreak?.onTime) {
+        setCumulative(c => {
+          const next = { ...c, totalXP: Math.max(0, c.totalXP - settings.xpPerOnTimeBreak) };
+          save('missionctrl_cumulative', next);
+          return next;
+        });
+      }
+
+      const updatedEntry = {
+        ...entry,
+        breaks: {
+          ...entry.breaks,
+          [breakId]: { startedAt: null, returnedAt: null, onTime: null, overtimeSeconds: 0 },
+        },
+      };
+      const next = { ...prev, [today]: updatedEntry };
+      save('missionctrl_daily', next);
+      return next;
+    });
+  }, [today, settings]);
+
   /** Check if today should be marked perfect (call after ticket/break updates). */
   const tryAwardPerfectDay = useCallback(() => {
     setDailyLogs(prev => {
@@ -374,6 +401,7 @@ export function useGameState() {
     undoTickets,
     startBreak,
     returnFromBreak,
+    resetBreak,
     tryAwardPerfectDay,
     updateSettings,
     // Week data

@@ -7,6 +7,7 @@ import { WeeklyTab } from './components/WeeklyTab';
 import { SettingsPanel } from './components/SettingsPanel';
 import { Confetti } from './components/Confetti';
 import { ToastMessage } from './components/ToastMessage';
+import { NotesTab } from './components/NotesTab';
 
 // ─── Message Pools ───────────────────────────────────────────
 const MESSAGES = {
@@ -90,6 +91,7 @@ export default function App() {
     undoTickets,
     startBreak,
     returnFromBreak,
+    resetBreak,
     tryAwardPerfectDay,
     updateSettings,
     getWeekData,
@@ -207,6 +209,7 @@ export default function App() {
               todayData={todayData}
               onStart={startBreak}
               onReturn={handleReturn}
+              onReset={resetBreak}
               onEditDuration={handleEditDuration}
             />
 
@@ -236,11 +239,13 @@ export default function App() {
               </div>
             )}
           </>
-        ) : (
+        ) : activeTab === 'week' ? (
           <WeeklyTab
             getWeekData={getWeekData}
             ticketGoal={settings.ticketGoal}
           />
+        ) : (
+          <NotesTab />
         )}
       </div>
 
@@ -266,6 +271,16 @@ export default function App() {
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
           </svg>
           Week
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'notes' ? 'active' : ''}`}
+          onClick={() => setActiveTab('notes')}
+        >
+          <svg viewBox="0 0 24 24">
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+          </svg>
+          Notes
         </button>
       </nav>
 

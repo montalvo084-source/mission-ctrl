@@ -62,7 +62,7 @@ function InlineEditOverlay({ breakId, currentDuration, onSave, onClose }) {
 }
 
 // ─── Individual Timer Card ────────────────────────────────────
-function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, onReturn, onEditDuration }) {
+function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, onReturn, onReset, onEditDuration }) {
   const [editing, setEditing] = useState(false);
   const { startedAt, returnedAt, onTime, overtimeSeconds } = breakData;
 
@@ -170,12 +170,18 @@ function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, 
           )}
         </div>
       )}
+
+      {(isRunning || isDone) && (
+        <button className="timer-reset-btn" onClick={() => onReset(id)}>
+          ↺ Reset
+        </button>
+      )}
     </div>
   );
 }
 
 // ─── Break Timers Container ───────────────────────────────────
-export function BreakTimers({ settings, todayData, onStart, onReturn, onEditDuration }) {
+export function BreakTimers({ settings, todayData, onStart, onReturn, onReset, onEditDuration }) {
   const durationMap = {
     break1: settings.break1Duration,
     break2: settings.break2Duration,
@@ -194,6 +200,7 @@ export function BreakTimers({ settings, todayData, onStart, onReturn, onEditDura
           xpPerOnTimeBreak={settings.xpPerOnTimeBreak}
           onStart={onStart}
           onReturn={onReturn}
+          onReset={onReset}
           onEditDuration={onEditDuration}
         />
       ))}
