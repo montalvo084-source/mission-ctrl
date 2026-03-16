@@ -87,6 +87,7 @@ export default function App() {
     xpIntoLevel,
     xpProgress,
     logTicket,
+    undoTickets,
     startBreak,
     returnFromBreak,
     tryAwardPerfectDay,
@@ -192,6 +193,7 @@ export default function App() {
               ticketGoal={settings.ticketGoal}
               xpPerTicket={settings.xpPerTicket}
               onTicket={handleTicket}
+              onUndo={undoTickets}
               onEditGoal={handleEditTicketGoal}
             />
 

@@ -40,13 +40,22 @@ function GoalEditOverlay({ currentGoal, onSave, onClose }) {
 }
 
 // ─── Ticket Tracker ──────────────────────────────────────────
-export function TicketTracker({ tickets, ticketGoal, xpPerTicket, onTicket, onEditGoal }) {
+export function TicketTracker({ tickets, ticketGoal, xpPerTicket, onTicket, onUndo, onEditGoal }) {
   const [particles, setParticles] = useState([]);
   const [floatingXPs, setFloatingXPs] = useState([]);
   const [poppedOrb, setPoppedOrb] = useState(null);
   const [editingGoal, setEditingGoal] = useState(false);
 
   const handleOrbTap = useCallback((e, index) => {
+    const filled = index < tickets;
+
+    // Tap a filled orb → undo back to that index
+    if (filled) {
+      onUndo(index);
+      return;
+    }
+
+    // Tap the next empty orb → log a ticket
     if (index !== tickets || tickets >= ticketGoal) return;
 
     const rect = e.currentTarget.getBoundingClientRect();
@@ -60,7 +69,7 @@ export function TicketTracker({ tickets, ticketGoal, xpPerTicket, onTicket, onEd
     setTimeout(() => setPoppedOrb(null), 400);
 
     onTicket();
-  }, [tickets, ticketGoal, xpPerTicket, onTicket]);
+  }, [tickets, ticketGoal, xpPerTicket, onTicket, onUndo]);
 
   const removeParticle = useCallback((id) => {
     setParticles(prev => prev.filter(p => p.id !== id));
@@ -112,8 +121,8 @@ export function TicketTracker({ tickets, ticketGoal, xpPerTicket, onTicket, onEd
               className={`orb ${filled ? 'filled' : ''} ${isNext ? 'next' : ''} ${isPopping ? 'pop' : ''}`}
               onClick={(e) => handleOrbTap(e, i)}
               role="button"
-              tabIndex={isNext ? 0 : -1}
-              aria-label={filled ? `Ticket ${i + 1} done` : isNext ? `Log ticket ${i + 1}` : `Ticket ${i + 1}`}
+              tabIndex={filled || isNext ? 0 : -1}
+              aria-label={filled ? `Undo ticket ${i + 1}` : isNext ? `Log ticket ${i + 1}` : `Ticket ${i + 1}`}
             >
               {filled
                 ? <span className="orb-check">✓</span>

@@ -281,6 +281,27 @@ export function useGameState() {
     });
   }, [today, settings]);
 
+  /** Undo tickets back to a given count (e.g. tapping orb 2 → set count to 2). */
+  const undoTickets = useCallback((newCount) => {
+    let xpToDeduct = 0;
+    setDailyLogs(prev => {
+      const entry = prev[today] || makeDayEntry();
+      if (newCount >= entry.tickets) return prev; // nothing to undo
+      xpToDeduct = (entry.tickets - newCount) * settings.xpPerTicket;
+      const updatedEntry = { ...entry, tickets: newCount, perfectDay: false };
+      const next = { ...prev, [today]: updatedEntry };
+      save('missionctrl_daily', next);
+      return next;
+    });
+    if (xpToDeduct > 0) {
+      setCumulative(prev => {
+        const next = { ...prev, totalXP: Math.max(0, prev.totalXP - xpToDeduct) };
+        save('missionctrl_cumulative', next);
+        return next;
+      });
+    }
+  }, [today, settings]);
+
   /** Update settings. */
   const updateSettings = useCallback((newSettings) => {
     const merged = { ...DEFAULT_SETTINGS, ...newSettings };
@@ -350,6 +371,7 @@ export function useGameState() {
     xpProgress,
     // Actions
     logTicket,
+    undoTickets,
     startBreak,
     returnFromBreak,
     tryAwardPerfectDay,
