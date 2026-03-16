@@ -10,6 +10,7 @@ import { ToastMessage } from './components/ToastMessage';
 import { NotesTab } from './components/NotesTab';
 import { WorkTimer } from './components/WorkTimer';
 import { LunchBanner } from './components/LunchBanner';
+import { StickyNotes } from './components/StickyNotes';
 
 // ─── Message Pools ───────────────────────────────────────────
 const MESSAGES = {
@@ -196,6 +197,9 @@ export default function App() {
                 </span>
               </div>
             </div>
+
+            {/* Sticky Note Reminders */}
+            <StickyNotes />
 
             {/* Tickets */}
             <div className="section-heading">

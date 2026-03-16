@@ -1428,6 +1428,130 @@ button:active {
   color: var(--text-muted);
 }
 
+/* ─── Sticky Note Reminders ──────────────────────────────── */
+.sticky-notes-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sticky-notes-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sticky-notes-heading h2 {
+  flex: 1;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0;
+}
+.sticky-note-add-btn {
+  background: transparent;
+  border: 1px solid var(--gold);
+  border-radius: 20px;
+  color: var(--gold);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.sticky-note-add-btn:active {
+  background: var(--gold-dim);
+}
+
+.sticky-notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sticky-note-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--gold);
+  border-radius: var(--radius-sm);
+  padding: 12px 36px 12px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.sticky-note-card:active,
+.sticky-note-card.editing {
+  background: var(--surface2);
+  border-left-color: var(--gold);
+  border-color: rgba(255, 215, 0, 0.35);
+}
+.sticky-note-text {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.5;
+  word-break: break-word;
+}
+.sticky-note-text.placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+.sticky-note-textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.5;
+  caret-color: var(--gold);
+  display: block;
+}
+.sticky-note-textarea::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+.sticky-note-done-btn {
+  margin-top: 8px;
+  padding: 5px 16px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-xs);
+  color: #000;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.sticky-note-done-btn:active { opacity: 0.8; }
+.sticky-note-delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
+}
+.sticky-note-delete-btn:active {
+  background: var(--danger-dim);
+  color: var(--danger);
+}
+
 /* ─── Lunch Time Glow Animations ─────────────────────────── */
 @keyframes lunchGlowPurple {
   0%, 100% { text-shadow: 0 0 8px rgba(123, 97, 255, 0.5); }
