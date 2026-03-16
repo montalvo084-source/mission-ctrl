@@ -66,17 +66,23 @@ function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, 
   const [editing, setEditing] = useState(false);
   const { startedAt, returnedAt, onTime, overtimeSeconds } = breakData;
 
-  const { remaining, percentage, isOvertime, isWarning, isRunning } = useTimer(
+  const GRACE_SECONDS = 45;
+
+  const { elapsed, remaining, percentage, isOvertime, isWarning, isRunning } = useTimer(
     returnedAt ? null : startedAt,
     duration
   );
+
+  const isGrace    = isOvertime && (elapsed - duration) <= GRACE_SECONDS;
+  const isHardOver = isOvertime && (elapsed - duration) > GRACE_SECONDS;
 
   const isDone = returnedAt !== null;
   let cardState = 'idle';
   if (isDone) {
     cardState = onTime ? 'state-done-good' : 'state-done-late';
   } else if (isRunning) {
-    if (isOvertime)    cardState = 'state-overtime';
+    if (isHardOver)     cardState = 'state-overtime';
+    else if (isGrace)   cardState = 'state-grace';
     else if (isWarning) cardState = 'state-warning';
     else                cardState = 'state-running';
   }
@@ -89,7 +95,7 @@ function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, 
     if (isOvertime) {
       const over = (Date.now() - startedAt) / 1000 - duration;
       displayTime = '+' + formatTime(over);
-      displayClass = 'overtime';
+      displayClass = isGrace ? 'grace' : 'overtime';
     } else {
       displayTime = formatTime(remaining);
       if (isWarning) displayClass = 'warning';
@@ -99,8 +105,9 @@ function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, 
   }
 
   let progressClass = 'normal';
-  if (isOvertime) progressClass = 'overtime';
-  else if (isWarning) progressClass = 'warning';
+  if (isHardOver)     progressClass = 'overtime';
+  else if (isOvertime) progressClass = 'warning'; // grace period uses amber bar
+  else if (isWarning)  progressClass = 'warning';
 
   const isIdle = !isRunning && !isDone;
 
@@ -135,6 +142,9 @@ function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, 
       {!isDone && (
         <>
           <div className={`timer-display ${displayClass}`}>{displayTime}</div>
+          {isGrace && (
+            <div className="timer-grace-label">45s grace — tap I'm Back</div>
+          )}
 
           {isRunning && (
             <div className="timer-progress-track">

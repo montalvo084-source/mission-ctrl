@@ -1133,6 +1133,24 @@ button:active {
   position: relative;
 }
 
+/* ─── Grace Period State ──────────────────────────────────── */
+.timer-display.grace {
+  color: #f5a623;
+}
+.timer-card.state-grace {
+  box-shadow: 0 0 18px rgba(245, 166, 35, 0.35);
+  border-color: rgba(245, 166, 35, 0.4);
+}
+.timer-grace-label {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: #f5a623;
+  text-align: center;
+  letter-spacing: 0.06em;
+  margin-top: -4px;
+  margin-bottom: 2px;
+}
+
 /* ─── Work / Focus Session Timer ─────────────────────────── */
 .work-timer-elapsed {
   font-family: var(--font-num);

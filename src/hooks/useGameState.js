@@ -210,7 +210,7 @@ export function useGameState() {
         lunch: settings.lunchDuration,
       };
       const elapsed = (Date.now() - brk.startedAt) / 1000;
-      const onTime = elapsed <= durationMap[breakId] + 5; // 5s grace
+      const onTime = elapsed <= durationMap[breakId] + 45; // 45s grace
       const overtimeSeconds = onTime ? 0 : Math.round(elapsed - durationMap[breakId]);
       result.onTime = onTime;
       result.overtimeSeconds = overtimeSeconds;
