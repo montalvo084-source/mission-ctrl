@@ -9,6 +9,7 @@ import { Confetti } from './components/Confetti';
 import { ToastMessage } from './components/ToastMessage';
 import { NotesTab } from './components/NotesTab';
 import { WorkTimer } from './components/WorkTimer';
+import { LunchBanner } from './components/LunchBanner';
 
 // ─── Message Pools ───────────────────────────────────────────
 const MESSAGES = {
@@ -177,6 +178,9 @@ export default function App() {
       <div className="app-content" key={activeTab}>
         {activeTab === 'today' ? (
           <>
+            {/* Lunch Schedule Banner */}
+            <LunchBanner settings={settings} onSave={updateSettings} />
+
             {/* Streak Row */}
             <div className="streak-bar">
               <div className="streak-card">

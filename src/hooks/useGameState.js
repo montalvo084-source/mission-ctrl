@@ -11,6 +11,8 @@ const DEFAULT_SETTINGS = {
   xpPerfectDayBonus: 100,
   xpPerLevel: 500,
   workSessionDuration: 35 * 60, // seconds (35 min default)
+  lunchTimeEarlyWeek: '11:45',  // Mon–Tue lunch time (HH:MM)
+  lunchTimeLateWeek:  '12:30',  // Wed–Fri lunch time (HH:MM)
 };
 
 const DEFAULT_CUMULATIVE = {

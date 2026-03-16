@@ -1427,3 +1427,149 @@ button:active {
 .note-textarea::placeholder {
   color: var(--text-muted);
 }
+
+/* ─── Lunch Schedule Banner ───────────────────────────────── */
+.lunch-banner {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px 14px;
+  margin-bottom: 4px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.lunch-banner.early-week {
+  border-color: rgba(123, 97, 255, 0.45);
+  box-shadow: 0 0 22px rgba(123, 97, 255, 0.2);
+}
+.lunch-banner.late-week {
+  border-color: rgba(255, 215, 0, 0.45);
+  box-shadow: 0 0 22px rgba(255, 215, 0, 0.2);
+}
+.lunch-banner.weekend {
+  border-color: var(--border);
+  opacity: 0.75;
+}
+
+.lunch-banner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.lunch-banner-label {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.lunch-banner-date {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.lunch-time {
+  font-family: var(--font-num);
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.early-week .lunch-time { color: var(--purple); }
+.late-week  .lunch-time { color: var(--gold); }
+
+.lunch-reason {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+.early-week .lunch-reason {
+  background: var(--purple-dim);
+  color: var(--purple);
+}
+.late-week .lunch-reason {
+  background: var(--gold-dim);
+  color: var(--gold);
+}
+
+.lunch-weekend {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: var(--text-muted);
+  padding: 6px 0 2px;
+}
+
+/* Edit overlay */
+.lunch-edit-overlay {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.lunch-edit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.lunch-edit-label {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.lunch-time-input {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-xs);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  padding: 6px 10px;
+  outline: none;
+  width: 130px;
+  text-align: center;
+  -webkit-appearance: none;
+}
+.lunch-time-input:focus {
+  border-color: var(--accent);
+}
+.lunch-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 2px;
+}
+.lunch-save-btn {
+  padding: 7px 20px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-xs);
+  color: #000;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.lunch-save-btn:active { opacity: 0.8; }
+.lunch-cancel-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+}
