@@ -1428,6 +1428,16 @@ button:active {
   color: var(--text-muted);
 }
 
+/* ─── Lunch Time Glow Animations ─────────────────────────── */
+@keyframes lunchGlowPurple {
+  0%, 100% { text-shadow: 0 0 8px rgba(123, 97, 255, 0.5); }
+  50%       { text-shadow: 0 0 22px rgba(123, 97, 255, 0.95), 0 0 44px rgba(123, 97, 255, 0.4); }
+}
+@keyframes lunchGlowGold {
+  0%, 100% { text-shadow: 0 0 8px rgba(255, 215, 0, 0.5); }
+  50%       { text-shadow: 0 0 22px rgba(255, 215, 0, 0.95), 0 0 44px rgba(255, 215, 0, 0.4); }
+}
+
 /* ─── Lunch Schedule Banner ───────────────────────────────── */
 .lunch-banner {
   background: var(--surface);
@@ -1479,8 +1489,14 @@ button:active {
   line-height: 1;
   margin-bottom: 8px;
 }
-.early-week .lunch-time { color: var(--purple); }
-.late-week  .lunch-time { color: var(--gold); }
+.early-week .lunch-time {
+  color: var(--purple);
+  animation: lunchGlowPurple 2.4s ease-in-out infinite;
+}
+.late-week .lunch-time {
+  color: var(--gold);
+  animation: lunchGlowGold 2.4s ease-in-out infinite;
+}
 
 .lunch-reason {
   display: inline-block;
@@ -1535,12 +1551,12 @@ button:active {
   border-radius: var(--radius-xs);
   color: var(--text);
   font-family: var(--font-ui);
-  font-size: 14px;
-  padding: 6px 10px;
+  font-size: 15px;
+  padding: 8px 12px;
   outline: none;
-  width: 130px;
+  min-height: 44px;
+  min-width: 120px;
   text-align: center;
-  -webkit-appearance: none;
 }
 .lunch-time-input:focus {
   border-color: var(--accent);
