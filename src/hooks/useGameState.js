@@ -10,6 +10,7 @@ const DEFAULT_SETTINGS = {
   xpPerOnTimeBreak: 30,
   xpPerfectDayBonus: 100,
   xpPerLevel: 500,
+  workSessionDuration: 35 * 60, // seconds (35 min default)
 };
 
 const DEFAULT_CUMULATIVE = {
@@ -33,6 +34,7 @@ function makeDayEntry() {
     },
     perfectDay: false,
     xpEarned: 0,
+    workSession: { startedAt: null },
   };
 }
 
@@ -329,6 +331,28 @@ export function useGameState() {
     }
   }, [today, settings]);
 
+  /** Start the focus/work session timer. */
+  const startWorkSession = useCallback(() => {
+    setDailyLogs(prev => {
+      const entry = prev[today] || makeDayEntry();
+      const updatedEntry = { ...entry, workSession: { startedAt: Date.now() } };
+      const next = { ...prev, [today]: updatedEntry };
+      save('missionctrl_daily', next);
+      return next;
+    });
+  }, [today]);
+
+  /** Reset the focus/work session timer back to idle. */
+  const resetWorkSession = useCallback(() => {
+    setDailyLogs(prev => {
+      const entry = prev[today] || makeDayEntry();
+      const updatedEntry = { ...entry, workSession: { startedAt: null } };
+      const next = { ...prev, [today]: updatedEntry };
+      save('missionctrl_daily', next);
+      return next;
+    });
+  }, [today]);
+
   /** Update settings. */
   const updateSettings = useCallback((newSettings) => {
     const merged = { ...DEFAULT_SETTINGS, ...newSettings };
@@ -399,6 +423,8 @@ export function useGameState() {
     // Actions
     logTicket,
     undoTickets,
+    startWorkSession,
+    resetWorkSession,
     startBreak,
     returnFromBreak,
     resetBreak,

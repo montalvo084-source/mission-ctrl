@@ -8,6 +8,7 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { Confetti } from './components/Confetti';
 import { ToastMessage } from './components/ToastMessage';
 import { NotesTab } from './components/NotesTab';
+import { WorkTimer } from './components/WorkTimer';
 
 // ─── Message Pools ───────────────────────────────────────────
 const MESSAGES = {
@@ -89,6 +90,8 @@ export default function App() {
     xpProgress,
     logTicket,
     undoTickets,
+    startWorkSession,
+    resetWorkSession,
     startBreak,
     returnFromBreak,
     resetBreak,
@@ -110,6 +113,11 @@ export default function App() {
     fireToast(result.onTime ? 'onTime' : 'late');
     setTimeout(() => tryAwardPerfectDay(), 50);
   }, [returnFromBreak, tryAwardPerfectDay, fireToast]);
+
+  // ─── Handle work session duration edit ─────────────────
+  const handleEditWorkDuration = useCallback((newDuration) => {
+    updateSettings({ ...settings, workSessionDuration: newDuration });
+  }, [settings, updateSettings]);
 
   // ─── Level-up detection ─────────────────────────────────
   const prevLevel = useRef(level);
@@ -190,6 +198,13 @@ export default function App() {
               <span className="dot" />
               <h2>Tickets</h2>
             </div>
+            <WorkTimer
+              startedAt={todayData.workSession?.startedAt ?? null}
+              duration={settings.workSessionDuration}
+              onStart={startWorkSession}
+              onReset={resetWorkSession}
+              onEditDuration={handleEditWorkDuration}
+            />
             <TicketTracker
               tickets={todayData.tickets}
               ticketGoal={settings.ticketGoal}

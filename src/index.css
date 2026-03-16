@@ -1133,6 +1133,47 @@ button:active {
   position: relative;
 }
 
+/* ─── Work / Focus Session Timer ─────────────────────────── */
+.work-timer-elapsed {
+  font-family: var(--font-num);
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: var(--green);
+  text-align: center;
+  letter-spacing: 0.04em;
+  margin: 8px 0 2px;
+  transition: color 0.3s;
+}
+.work-timer-elapsed.warning {
+  color: #f5a623;
+}
+.work-timer-elapsed.overtime {
+  color: var(--red);
+}
+
+.work-timer-sub {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  min-height: 16px;
+  margin-bottom: 2px;
+}
+
+/* Fill bar — grows left→right as work time elapses */
+.work-timer-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--green);
+  transition: width 0.25s linear, background 0.3s;
+}
+.work-timer-fill.warning {
+  background: #f5a623;
+}
+.work-timer-fill.overtime {
+  background: var(--red);
+}
+
 /* ─── Timer Reset Button ──────────────────────────────────── */
 .timer-reset-btn {
   display: block;
