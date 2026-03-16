@@ -11,6 +11,7 @@ import { NotesTab } from './components/NotesTab';
 import { WorkTimer } from './components/WorkTimer';
 import { LunchBanner } from './components/LunchBanner';
 import { StickyNotes } from './components/StickyNotes';
+import { MorningChecklist } from './components/MorningChecklist';
 
 // ─── Message Pools ───────────────────────────────────────────
 const MESSAGES = {
@@ -24,6 +25,8 @@ const MESSAGES = {
   streak7:   ['7 days straight! One full week! 🔥🔥'],
   streak14:  ['14-day streak! Two weeks of excellence! 🔥🔥🔥'],
   streak30:  ['30 DAYS! Absolute machine! 🏆🔥'],
+  morningTask:     ['Nice! One more checked off! ✅', 'Getting set up! 💪', 'On it! 🎯'],
+  morningComplete: ['Startup complete! Let\'s get it! 🚀', 'All systems go! Time to crush it! 💪', 'Locked and loaded! 🔥'],
 };
 
 const TOAST_COLORS = {
@@ -36,7 +39,9 @@ const TOAST_COLORS = {
   streak3:   'rgba(255, 165, 0, 0.3)',
   streak7:   'rgba(255, 165, 0, 0.4)',
   streak14:  'rgba(255, 165, 0, 0.5)',
-  streak30:  'rgba(255, 215, 0, 0.5)',
+  streak30:       'rgba(255, 215, 0, 0.5)',
+  morningTask:    'rgba(0, 255, 136, 0.25)',
+  morningComplete:'rgba(0, 255, 136, 0.45)',
 };
 
 const TOAST_ICONS = {
@@ -49,7 +54,9 @@ const TOAST_ICONS = {
   streak3:   '🔥',
   streak7:   '🔥',
   streak14:  '🔥',
-  streak30:  '🏆',
+  streak30:       '🏆',
+  morningTask:    '✅',
+  morningComplete:'🚀',
 };
 
 function pick(arr) {
@@ -92,6 +99,8 @@ export default function App() {
     xpProgress,
     logTicket,
     undoTickets,
+    checkMorningTask,
+    uncheckMorningTask,
     startWorkSession,
     resetWorkSession,
     startBreak,
@@ -115,6 +124,12 @@ export default function App() {
     fireToast(result.onTime ? 'onTime' : 'late');
     setTimeout(() => tryAwardPerfectDay(), 50);
   }, [returnFromBreak, tryAwardPerfectDay, fireToast]);
+
+  // ─── Handle morning task check ──────────────────────────
+  const handleMorningCheck = useCallback((taskId) => {
+    const { allDone } = checkMorningTask(taskId);
+    fireToast(allDone ? 'morningComplete' : 'morningTask');
+  }, [checkMorningTask, fireToast]);
 
   // ─── Handle work session duration edit ─────────────────
   const handleEditWorkDuration = useCallback((newDuration) => {
@@ -197,6 +212,16 @@ export default function App() {
                 </span>
               </div>
             </div>
+
+            {/* Morning Startup Checklist */}
+            <MorningChecklist
+              tasks={settings.morningTasks || []}
+              checks={todayData.morningChecks || {}}
+              xpPerTask={settings.xpPerMorningTask}
+              onCheck={handleMorningCheck}
+              onUncheck={uncheckMorningTask}
+              onEditTasks={(newTasks) => updateSettings({ ...settings, morningTasks: newTasks })}
+            />
 
             {/* Sticky Note Reminders */}
             <StickyNotes />

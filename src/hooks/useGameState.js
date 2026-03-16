@@ -13,6 +13,13 @@ const DEFAULT_SETTINGS = {
   workSessionDuration: 35 * 60, // seconds (35 min default)
   lunchTimeEarlyWeek: '11:45',  // Mon–Tue lunch time (HH:MM)
   lunchTimeLateWeek:  '12:30',  // Wed–Fri lunch time (HH:MM)
+  xpPerMorningTask: 15,
+  morningTasks: [
+    { id: 'm1', label: 'Pull up Citrix' },
+    { id: 'm2', label: 'Log into Outlook (Citrix)' },
+    { id: 'm3', label: 'Clock in to ADP' },
+    { id: 'm4', label: 'Sign into Ring Central' },
+  ],
 };
 
 const DEFAULT_CUMULATIVE = {
@@ -37,6 +44,7 @@ function makeDayEntry() {
     perfectDay: false,
     xpEarned: 0,
     workSession: { startedAt: null },
+    morningChecks: {},
   };
 }
 
@@ -333,6 +341,46 @@ export function useGameState() {
     }
   }, [today, settings]);
 
+  /** Check off a morning startup task. Returns { allDone }. */
+  const checkMorningTask = useCallback((taskId) => {
+    let allDone = false;
+    setDailyLogs(prev => {
+      const entry = prev[today] || makeDayEntry();
+      if (entry.morningChecks?.[taskId]) return prev;
+      const newChecks = { ...entry.morningChecks, [taskId]: true };
+      allDone = settings.morningTasks.every(t => newChecks[t.id]);
+      const updatedEntry = { ...entry, morningChecks: newChecks };
+      const next = { ...prev, [today]: updatedEntry };
+      save('missionctrl_daily', next);
+      return next;
+    });
+    setCumulative(prev => {
+      const next = { ...prev, totalXP: prev.totalXP + settings.xpPerMorningTask };
+      save('missionctrl_cumulative', next);
+      return next;
+    });
+    return { allDone };
+  }, [today, settings]);
+
+  /** Uncheck a morning startup task (deducts XP). */
+  const uncheckMorningTask = useCallback((taskId) => {
+    setDailyLogs(prev => {
+      const entry = prev[today] || makeDayEntry();
+      if (!entry.morningChecks?.[taskId]) return prev;
+      const newChecks = { ...entry.morningChecks };
+      delete newChecks[taskId];
+      const updatedEntry = { ...entry, morningChecks: newChecks };
+      const next = { ...prev, [today]: updatedEntry };
+      save('missionctrl_daily', next);
+      return next;
+    });
+    setCumulative(prev => {
+      const next = { ...prev, totalXP: Math.max(0, prev.totalXP - settings.xpPerMorningTask) };
+      save('missionctrl_cumulative', next);
+      return next;
+    });
+  }, [today, settings]);
+
   /** Start the focus/work session timer. */
   const startWorkSession = useCallback(() => {
     setDailyLogs(prev => {
@@ -425,6 +473,8 @@ export function useGameState() {
     // Actions
     logTicket,
     undoTickets,
+    checkMorningTask,
+    uncheckMorningTask,
     startWorkSession,
     resetWorkSession,
     startBreak,

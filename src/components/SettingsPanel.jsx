@@ -146,6 +146,15 @@ export function SettingsPanel({ settings, onSave, onClose }) {
                 min={100} max={5000} step={100}
               />
             </div>
+
+            <div className="settings-row">
+              <span className="settings-row-label">XP per Startup Task</span>
+              <Stepper
+                value={draft.xpPerMorningTask ?? 15}
+                onChange={v => set('xpPerMorningTask', v)}
+                min={5} max={100} step={5}
+              />
+            </div>
           </div>
         </div>
 
