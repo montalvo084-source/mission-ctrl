@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTimer, formatTime, formatMinutes } from '../hooks/useTimer';
 
 // ─── Inline Stepper ───────────────────────────────────────────
@@ -46,9 +46,13 @@ function InlineEditOverlay({ currentDuration, onSave, onClose }) {
 // ─── Work Timer ───────────────────────────────────────────────
 export function WorkTimer({ startedAt, duration, onStart, onReset, onEditDuration }) {
   const [editing, setEditing] = useState(false);
+  const [testMode, setTestMode] = useState(false);
 
-  const notify = { id: 1000, title: 'Focus Session', body: "Target reached — great work!" };
-  const { elapsed, remaining, isOvertime, isRunning } = useTimer(startedAt, duration, notify);
+  const activeDuration = testMode ? 10 : duration;
+  const notify = useMemo(() => ({
+    id: 1000, title: 'Focus Session', body: 'Target reached — great work!'
+  }), []);
+  const { elapsed, remaining, isOvertime, isRunning } = useTimer(startedAt, activeDuration, notify);
 
   // Warning at 5 min remaining (more useful than 60s for a 35-min session)
   const isWarning = isRunning && !isOvertime && remaining <= 300;
@@ -123,11 +127,21 @@ export function WorkTimer({ startedAt, duration, onStart, onReset, onEditDuratio
 
       {/* Action buttons */}
       {!isRunning ? (
-        <button className="timer-btn start" onClick={onStart}>
-          ▶ Start Session
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="timer-btn start" style={{ flex: 1 }} onClick={onStart}>
+            ▶ Start Session
+          </button>
+          <button
+            className="timer-reset-btn"
+            style={{ fontSize: 11, padding: '0 10px' }}
+            onClick={() => { setTestMode(true); onStart(); }}
+            title="Test with 10 second timer"
+          >
+            ⚡ 10s
+          </button>
+        </div>
       ) : (
-        <button className="timer-reset-btn" onClick={onReset}>
+        <button className="timer-reset-btn" onClick={() => { setTestMode(false); onReset(); }}>
           ↺ Reset
         </button>
       )}

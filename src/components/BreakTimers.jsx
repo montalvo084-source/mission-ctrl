@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTimer, formatTime, formatMinutes } from '../hooks/useTimer';
 
 const BREAKS = [
@@ -67,15 +67,19 @@ const NOTIFY_IDS = { break1: 1001, break2: 1002, lunch: 1003 };
 // ─── Individual Timer Card ────────────────────────────────────
 function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, onReturn, onReset, onEditDuration }) {
   const [editing, setEditing] = useState(false);
+  const [testMode, setTestMode] = useState(false);
   const { startedAt, returnedAt, onTime, overtimeSeconds } = breakData;
 
   const GRACE_SECONDS = 45;
+  const activeDuration = testMode ? 10 : duration;
 
-  const notify = { id: NOTIFY_IDS[id], title: `${label} Over`, body: "Time's up — tap I'm Back!" };
+  const notify = useMemo(() => ({
+    id: NOTIFY_IDS[id], title: `${label} Over`, body: "Time's up — tap I'm Back!"
+  }), [id, label]);
 
   const { elapsed, remaining, percentage, isOvertime, isWarning, isRunning } = useTimer(
     returnedAt ? null : startedAt,
-    duration,
+    activeDuration,
     notify
   );
 
@@ -162,9 +166,19 @@ function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, 
           )}
 
           {!isRunning && (
-            <button className="timer-btn start" onClick={() => onStart(id)}>
-              Start {label}
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="timer-btn start" style={{ flex: 1 }} onClick={() => onStart(id)}>
+                Start {label}
+              </button>
+              <button
+                className="timer-reset-btn"
+                style={{ fontSize: 11, padding: '0 10px' }}
+                onClick={() => { setTestMode(true); onStart(id); }}
+                title="Test with 10 second timer"
+              >
+                ⚡ 10s
+              </button>
+            </div>
           )}
 
           {isRunning && (
@@ -188,7 +202,7 @@ function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, 
       )}
 
       {(isRunning || isDone) && (
-        <button className="timer-reset-btn" onClick={() => onReset(id)}>
+        <button className="timer-reset-btn" onClick={() => { setTestMode(false); onReset(id); }}>
           ↺ Reset
         </button>
       )}

@@ -12,6 +12,7 @@ import { WorkTimer } from './components/WorkTimer';
 import { LunchBanner } from './components/LunchBanner';
 import { StickyNotes } from './components/StickyNotes';
 import { MorningChecklist } from './components/MorningChecklist';
+import { requestPermissionEagerly } from './utils/nativeNotifications';
 
 // ─── Message Pools ───────────────────────────────────────────
 const MESSAGES = {
@@ -135,6 +136,9 @@ export default function App() {
   const handleEditWorkDuration = useCallback((newDuration) => {
     updateSettings({ ...settings, workSessionDuration: newDuration });
   }, [settings, updateSettings]);
+
+  // ─── Request notification permission on first launch ────
+  useEffect(() => { requestPermissionEagerly(); }, []);
 
   // ─── Level-up detection ─────────────────────────────────
   const prevLevel = useRef(level);

@@ -15,6 +15,10 @@ export function useTimer(startedAt, duration, notify = null) {
   const alarmScheduled = useRef(false);
   const lastStartedAt = useRef(null);
 
+  // Keep notifyRef current on every render without triggering the alarm effect
+  const notifyRef = useRef(notify);
+  useEffect(() => { notifyRef.current = notify; });
+
   // Interval tick for UI updates
   useEffect(() => {
     if (!startedAt) return;
@@ -22,25 +26,25 @@ export function useTimer(startedAt, duration, notify = null) {
     return () => clearInterval(id);
   }, [startedAt]);
 
-  // Schedule / cancel native alarm when timer starts or stops
+  // Schedule / cancel native alarm — only re-runs when startedAt or duration changes
   useEffect(() => {
-    if (!notify) return;
+    const n = notifyRef.current;
+    if (!n) return;
 
     if (startedAt && startedAt !== lastStartedAt.current) {
       // New timer started — schedule alarm at end time
       lastStartedAt.current = startedAt;
       alarmScheduled.current = true;
-      const fireAt = new Date(startedAt + duration * 1000);
-      scheduleNativeAlarm(notify.id, notify.title, notify.body, fireAt);
+      scheduleNativeAlarm(n.id, n.title, n.body, new Date(startedAt + duration * 1000));
     }
 
     if (!startedAt && alarmScheduled.current) {
       // Timer was reset/cancelled — cancel the alarm
       alarmScheduled.current = false;
       lastStartedAt.current = null;
-      cancelNativeAlarm(notify.id);
+      cancelNativeAlarm(n.id);
     }
-  }, [startedAt, duration, notify]);
+  }, [startedAt, duration]); // notify intentionally omitted — accessed via ref
 
   if (!startedAt) {
     return {
