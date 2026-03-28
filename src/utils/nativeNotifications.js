@@ -27,7 +27,7 @@ export async function scheduleNativeAlarm(id, title, body, triggerAt) {
   if (!Capacitor.isNativePlatform()) return;
   try {
     await LocalNotifications.schedule({
-      notifications: [{ id, title, body, schedule: { at: triggerAt } }],
+      notifications: [{ id, title, body, sound: 'default', schedule: { at: triggerAt } }],
     });
   } catch (e) {
     console.error('[Notifications] Schedule failed:', e);
