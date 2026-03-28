@@ -16,32 +16,46 @@ export async function requestPermissionEagerly() {
   }
 }
 
+// How many repeat notifications to fire (every REPEAT_INTERVAL_SEC seconds)
+const REPEAT_COUNT = 24;        // 2 minutes worth
+const REPEAT_INTERVAL_SEC = 5;  // fire every 5 seconds
+
+// Each alarm occupies a block of IDs: base * 100 + 0..REPEAT_COUNT
+function burstIds(baseId) {
+  return Array.from({ length: REPEAT_COUNT }, (_, i) => ({ id: baseId * 100 + i }));
+}
+
 /**
- * Schedule a native local notification at a specific time.
- * @param {number} id        — unique integer ID (used to cancel later)
+ * Schedule a repeating alarm — fires every 5 seconds for 2 minutes until cancelled.
+ * @param {number} id        — unique base ID (used to cancel later)
  * @param {string} title     — notification title
  * @param {string} body      — notification body
- * @param {Date}   triggerAt — exact Date when it should fire
+ * @param {Date}   triggerAt — exact Date when first notification fires
  */
 export async function scheduleNativeAlarm(id, title, body, triggerAt) {
   if (!Capacitor.isNativePlatform()) return;
   try {
-    await LocalNotifications.schedule({
-      notifications: [{ id, title, body, sound: 'default', schedule: { at: triggerAt } }],
-    });
+    const notifications = Array.from({ length: REPEAT_COUNT }, (_, i) => ({
+      id: id * 100 + i,
+      title,
+      body,
+      sound: 'default',
+      schedule: { at: new Date(triggerAt.getTime() + i * REPEAT_INTERVAL_SEC * 1000) },
+    }));
+    await LocalNotifications.schedule({ notifications });
   } catch (e) {
     console.error('[Notifications] Schedule failed:', e);
   }
 }
 
 /**
- * Cancel a previously scheduled notification by ID.
- * @param {number} id
+ * Cancel all repeating notifications for a given alarm.
+ * @param {number} id — the base ID passed to scheduleNativeAlarm
  */
 export async function cancelNativeAlarm(id) {
   if (!Capacitor.isNativePlatform()) return;
   try {
-    await LocalNotifications.cancel({ notifications: [{ id }] });
+    await LocalNotifications.cancel({ notifications: burstIds(id) });
   } catch (e) {
     console.error('[Notifications] Cancel failed:', e);
   }
