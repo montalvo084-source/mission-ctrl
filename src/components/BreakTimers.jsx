@@ -61,6 +61,9 @@ function InlineEditOverlay({ breakId, currentDuration, onSave, onClose }) {
   );
 }
 
+// Unique numeric IDs for native notification scheduling
+const NOTIFY_IDS = { break1: 1001, break2: 1002, lunch: 1003 };
+
 // ─── Individual Timer Card ────────────────────────────────────
 function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, onReturn, onReset, onEditDuration }) {
   const [editing, setEditing] = useState(false);
@@ -68,9 +71,12 @@ function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, 
 
   const GRACE_SECONDS = 45;
 
+  const notify = { id: NOTIFY_IDS[id], title: `${label} Over`, body: "Time's up — tap I'm Back!" };
+
   const { elapsed, remaining, percentage, isOvertime, isWarning, isRunning } = useTimer(
     returnedAt ? null : startedAt,
-    duration
+    duration,
+    notify
   );
 
   const isGrace    = isOvertime && (elapsed - duration) <= GRACE_SECONDS;

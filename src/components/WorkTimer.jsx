@@ -47,7 +47,8 @@ function InlineEditOverlay({ currentDuration, onSave, onClose }) {
 export function WorkTimer({ startedAt, duration, onStart, onReset, onEditDuration }) {
   const [editing, setEditing] = useState(false);
 
-  const { elapsed, remaining, isOvertime, isRunning } = useTimer(startedAt, duration);
+  const notify = { id: 1000, title: 'Focus Session', body: "Target reached — great work!" };
+  const { elapsed, remaining, isOvertime, isRunning } = useTimer(startedAt, duration, notify);
 
   // Warning at 5 min remaining (more useful than 60s for a 35-min session)
   const isWarning = isRunning && !isOvertime && remaining <= 300;

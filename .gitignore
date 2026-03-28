@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Capacitor native projects (build locally, not stored in repo)
+/ios
+/android

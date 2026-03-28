@@ -1,19 +1,46 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { scheduleNativeAlarm, cancelNativeAlarm } from '../utils/nativeNotifications';
 
 /**
  * useTimer — tracks elapsed/remaining time from a startedAt timestamp.
+ * On native iOS, schedules a local notification when the timer ends.
+ *
  * @param {number|null} startedAt  — Date.now() when timer was started, or null
  * @param {number}      duration   — target duration in seconds
+ * @param {object}      [notify]   — optional { id, title, body } for native alarm
  * @returns {{ elapsed, remaining, percentage, isOvertime, isWarning, isRunning }}
  */
-export function useTimer(startedAt, duration) {
+export function useTimer(startedAt, duration, notify = null) {
   const [tick, setTick] = useState(0);
+  const alarmScheduled = useRef(false);
+  const lastStartedAt = useRef(null);
 
+  // Interval tick for UI updates
   useEffect(() => {
     if (!startedAt) return;
     const id = setInterval(() => setTick(t => t + 1), 250);
     return () => clearInterval(id);
   }, [startedAt]);
+
+  // Schedule / cancel native alarm when timer starts or stops
+  useEffect(() => {
+    if (!notify) return;
+
+    if (startedAt && startedAt !== lastStartedAt.current) {
+      // New timer started — schedule alarm at end time
+      lastStartedAt.current = startedAt;
+      alarmScheduled.current = true;
+      const fireAt = new Date(startedAt + duration * 1000);
+      scheduleNativeAlarm(notify.id, notify.title, notify.body, fireAt);
+    }
+
+    if (!startedAt && alarmScheduled.current) {
+      // Timer was reset/cancelled — cancel the alarm
+      alarmScheduled.current = false;
+      lastStartedAt.current = null;
+      cancelNativeAlarm(notify.id);
+    }
+  }, [startedAt, duration, notify]);
 
   if (!startedAt) {
     return {
