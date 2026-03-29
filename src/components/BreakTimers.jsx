@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTimer, formatTime, formatMinutes } from '../hooks/useTimer';
+import { startAlarm, stopAlarm } from '../utils/alarmPlayer';
 
 const BREAKS = [
   { id: 'break1', label: 'Break 1' },
@@ -29,7 +30,6 @@ function InlineEditOverlay({ breakId, currentDuration, onSave, onClose }) {
   const [draft, setDraft] = useState(currentDuration);
   const ref = useRef(null);
 
-  // Dismiss on outside click
   useEffect(() => {
     function handle(e) {
       if (ref.current && !ref.current.contains(e.target)) onClose();
@@ -83,8 +83,26 @@ function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, 
     notify
   );
 
-  const isGrace    = isOvertime && (elapsed - duration) <= GRACE_SECONDS;
-  const isHardOver = isOvertime && (elapsed - duration) > GRACE_SECONDS;
+  // Start in-app alarm the moment timer hits overtime; stop when done/reset
+  const alarmActiveRef = useRef(false);
+  useEffect(() => {
+    if (isOvertime && isRunning && !alarmActiveRef.current) {
+      alarmActiveRef.current = true;
+      startAlarm();
+    }
+    if ((!isRunning || returnedAt) && alarmActiveRef.current) {
+      alarmActiveRef.current = false;
+      stopAlarm();
+    }
+  }, [isOvertime, isRunning, returnedAt]);
+
+  // Stop alarm on unmount just in case
+  useEffect(() => () => {
+    if (alarmActiveRef.current) { stopAlarm(); alarmActiveRef.current = false; }
+  }, []);
+
+  const isGrace    = isOvertime && (elapsed - activeDuration) <= GRACE_SECONDS;
+  const isHardOver = isOvertime && (elapsed - activeDuration) > GRACE_SECONDS;
 
   const isDone = returnedAt !== null;
   let cardState = 'idle';
@@ -103,7 +121,7 @@ function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, 
     displayTime = formatMinutes(duration);
   } else if (isRunning) {
     if (isOvertime) {
-      const over = (Date.now() - startedAt) / 1000 - duration;
+      const over = elapsed - activeDuration;
       displayTime = '+' + formatTime(over);
       displayClass = isGrace ? 'grace' : 'overtime';
     } else {
@@ -115,11 +133,24 @@ function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, 
   }
 
   let progressClass = 'normal';
-  if (isHardOver)     progressClass = 'overtime';
-  else if (isOvertime) progressClass = 'warning'; // grace period uses amber bar
+  if (isHardOver)      progressClass = 'overtime';
+  else if (isOvertime) progressClass = 'warning';
   else if (isWarning)  progressClass = 'warning';
 
   const isIdle = !isRunning && !isDone;
+
+  function handleReturn() {
+    stopAlarm();
+    alarmActiveRef.current = false;
+    onReturn(id);
+  }
+
+  function handleReset() {
+    stopAlarm();
+    alarmActiveRef.current = false;
+    setTestMode(false);
+    onReset(id);
+  }
 
   return (
     <div className={`timer-card ${cardState}`}>
@@ -139,7 +170,6 @@ function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, 
         </div>
       </div>
 
-      {/* Inline edit overlay */}
       {editing && (
         <InlineEditOverlay
           breakId={id}
@@ -182,7 +212,7 @@ function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, 
           )}
 
           {isRunning && (
-            <button className="timer-btn back" onClick={() => onReturn(id)}>
+            <button className="timer-btn back" onClick={handleReturn}>
               I'm Back
             </button>
           )}
@@ -202,7 +232,7 @@ function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, 
       )}
 
       {(isRunning || isDone) && (
-        <button className="timer-reset-btn" onClick={() => { setTestMode(false); onReset(id); }}>
+        <button className="timer-reset-btn" onClick={handleReset}>
           ↺ Reset
         </button>
       )}

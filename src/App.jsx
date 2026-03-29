@@ -13,6 +13,7 @@ import { LunchBanner } from './components/LunchBanner';
 import { StickyNotes } from './components/StickyNotes';
 import { MorningChecklist } from './components/MorningChecklist';
 import { requestPermissionEagerly } from './utils/nativeNotifications';
+import { unlockAudio } from './utils/alarmPlayer';
 
 // ─── Message Pools ───────────────────────────────────────────
 const MESSAGES = {
@@ -138,7 +139,12 @@ export default function App() {
   }, [settings, updateSettings]);
 
   // ─── Request notification permission on first launch ────
-  useEffect(() => { requestPermissionEagerly(); }, []);
+  useEffect(() => {
+    requestPermissionEagerly();
+    // Unlock Web Audio on first user interaction (iOS requirement)
+    function unlock() { unlockAudio(); document.removeEventListener('touchstart', unlock); }
+    document.addEventListener('touchstart', unlock, { once: true });
+  }, []);
 
   // ─── Level-up detection ─────────────────────────────────
   const prevLevel = useRef(level);
