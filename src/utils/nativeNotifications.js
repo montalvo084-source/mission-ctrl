@@ -16,10 +16,9 @@ export async function requestPermissionEagerly() {
   }
 }
 
-// Repeat alarm every 30 seconds for 4 minutes (8 total notifications)
-// 30s spacing ensures iOS plays the full sound on each one — 5s was too fast and got suppressed
-const REPEAT_COUNT = 8;
-const REPEAT_INTERVAL_SEC = 30;
+// Repeat alarm every 15 seconds for 3 minutes (12 total notifications)
+const REPEAT_COUNT = 12;
+const REPEAT_INTERVAL_SEC = 15;
 
 // Each alarm occupies a block of IDs: base * 100 + 0..REPEAT_COUNT
 function burstIds(baseId) {
@@ -40,7 +39,7 @@ export async function scheduleNativeAlarm(id, title, body, triggerAt) {
       id: id * 100 + i,
       title,
       body,
-      sound: 'alarm.wav',
+      sound: 'default',
       schedule: { at: new Date(triggerAt.getTime() + i * REPEAT_INTERVAL_SEC * 1000) },
     }));
     await LocalNotifications.schedule({ notifications });

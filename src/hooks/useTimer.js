@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { scheduleNativeAlarm, cancelNativeAlarm } from '../utils/nativeNotifications';
 
 /**
  * useTimer — tracks elapsed/remaining time from a startedAt timestamp.
  * On native iOS, schedules a local notification when the timer ends.
+ * Forces a display refresh when the app resumes from background.
  *
  * @param {number|null} startedAt  — Date.now() when timer was started, or null
  * @param {number}      duration   — target duration in seconds
@@ -19,11 +21,37 @@ export function useTimer(startedAt, duration, notify = null) {
   const notifyRef = useRef(notify);
   useEffect(() => { notifyRef.current = notify; });
 
-  // Interval tick for UI updates
+  // Interval tick for UI updates while app is in foreground
   useEffect(() => {
     if (!startedAt) return;
     const id = setInterval(() => setTick(t => t + 1), 250);
     return () => clearInterval(id);
+  }, [startedAt]);
+
+  // Force display refresh when app comes back from background (iOS suspends JS)
+  useEffect(() => {
+    if (!startedAt) return;
+
+    // Web: use visibilitychange
+    function onVisible() {
+      if (document.visibilityState === 'visible') setTick(t => t + 1);
+    }
+    document.addEventListener('visibilitychange', onVisible);
+
+    // Native iOS: use Capacitor App plugin resume event
+    let removeListener = null;
+    if (Capacitor.isNativePlatform()) {
+      import('@capacitor/app').then(({ App }) => {
+        App.addListener('resume', () => setTick(t => t + 1)).then(handle => {
+          removeListener = () => handle.remove();
+        });
+      }).catch(() => {});
+    }
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      if (removeListener) removeListener();
+    };
   }, [startedAt]);
 
   // Schedule / cancel native alarm — only re-runs when startedAt or duration changes
@@ -32,14 +60,12 @@ export function useTimer(startedAt, duration, notify = null) {
     if (!n) return;
 
     if (startedAt && startedAt !== lastStartedAt.current) {
-      // New timer started — schedule alarm at end time
       lastStartedAt.current = startedAt;
       alarmScheduled.current = true;
       scheduleNativeAlarm(n.id, n.title, n.body, new Date(startedAt + duration * 1000));
     }
 
     if (!startedAt && alarmScheduled.current) {
-      // Timer was reset/cancelled — cancel the alarm
       alarmScheduled.current = false;
       lastStartedAt.current = null;
       cancelNativeAlarm(n.id);
