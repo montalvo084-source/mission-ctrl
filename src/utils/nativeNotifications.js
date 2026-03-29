@@ -35,6 +35,9 @@ function burstIds(baseId) {
 export async function scheduleNativeAlarm(id, title, body, triggerAt) {
   if (!Capacitor.isNativePlatform()) return;
   try {
+    // Always cancel any stale notifications for this ID first (e.g. leftover from test mode)
+    await LocalNotifications.cancel({ notifications: burstIds(id) });
+
     const notifications = Array.from({ length: REPEAT_COUNT }, (_, i) => ({
       id: id * 100 + i,
       title,
