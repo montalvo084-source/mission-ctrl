@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTimer, formatTime, formatMinutes } from '../hooks/useTimer';
-import { startAlarm, stopAlarm } from '../utils/alarmPlayer';
+import { startAlarm, stopAlarm, unlockAudio } from '../utils/alarmPlayer';
 
 const BREAKS = [
   { id: 'break1', label: 'Break 1' },
@@ -197,13 +197,13 @@ function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, 
 
           {!isRunning && (
             <div style={{ display: 'flex', gap: 8 }}>
-              <button className="timer-btn start" style={{ flex: 1 }} onClick={() => onStart(id)}>
+              <button className="timer-btn start" style={{ flex: 1 }} onClick={() => { unlockAudio(); onStart(id); }}>
                 Start {label}
               </button>
               <button
                 className="timer-reset-btn"
                 style={{ fontSize: 11, padding: '0 10px' }}
-                onClick={() => { setTestMode(true); onStart(id); }}
+                onClick={() => { unlockAudio(); setTestMode(true); onStart(id); }}
                 title="Test with 10 second timer"
               >
                 ⚡ 10s

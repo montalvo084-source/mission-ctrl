@@ -20,25 +20,25 @@ function playBeep() {
     const ctx = getCtx();
     if (ctx.state === 'suspended') ctx.resume();
 
-    // Two-tone urgent beep (high + slightly lower = classic alarm feel)
-    const tones = [960, 800];
+    // Three rapid high-pitched beeps — maximum urgency
+    const tones = [1100, 1100, 1100];
     tones.forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
       gain.connect(ctx.destination);
 
-      osc.type = 'square'; // harsh/urgent sound
+      osc.type = 'square';
       osc.frequency.value = freq;
 
-      const startAt = ctx.currentTime + i * 0.18;
+      const startAt = ctx.currentTime + i * 0.22;
       gain.gain.setValueAtTime(0, startAt);
-      gain.gain.linearRampToValueAtTime(0.7, startAt + 0.02);
-      gain.gain.setValueAtTime(0.7, startAt + 0.14);
-      gain.gain.linearRampToValueAtTime(0, startAt + 0.18);
+      gain.gain.linearRampToValueAtTime(1.0, startAt + 0.01); // max volume
+      gain.gain.setValueAtTime(1.0, startAt + 0.17);
+      gain.gain.linearRampToValueAtTime(0, startAt + 0.20);
 
       osc.start(startAt);
-      osc.stop(startAt + 0.18);
+      osc.stop(startAt + 0.22);
     });
   } catch (e) {
     // Web Audio not available — silent fallback
@@ -46,14 +46,23 @@ function playBeep() {
 }
 
 /**
- * Start the looping alarm. Plays immediately and repeats every 900ms.
+ * Start the looping alarm. Plays immediately and repeats every 800ms.
  * Call this the moment a timer hits 0.
  */
 export function startAlarm() {
   if (isPlaying) return;
   isPlaying = true;
-  playBeep();
-  beepInterval = setInterval(playBeep, 900);
+  // Resume context immediately in case it was suspended
+  try {
+    const ctx = getCtx();
+    ctx.resume().then(() => {
+      playBeep();
+      beepInterval = setInterval(playBeep, 800);
+    });
+  } catch (e) {
+    playBeep();
+    beepInterval = setInterval(playBeep, 800);
+  }
 }
 
 /**
