@@ -36,6 +36,8 @@ export async function scheduleNativeAlarm(id, title, body, triggerAt) {
       body: i === 0 ? body : `Still waiting — tap to open Mission Ctrl`,
       sound: 'default',
       schedule: { at: new Date(triggerAt.getTime() + i * FOLLOW_UP_INTERVAL_SEC * 1000) },
+      // Play sound + show banner even when app is in foreground
+      foregroundPresentationOptions: { sound: true, banner: true, badge: false },
     }));
 
     await LocalNotifications.schedule({ notifications });

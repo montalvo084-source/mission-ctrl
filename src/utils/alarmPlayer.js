@@ -1,13 +1,16 @@
 /**
- * alarmPlayer — loud looping beep + vibration alarm using Web Audio API + Haptics.
- * Starts the moment called, stops only when stopAlarm() is called.
+ * alarmPlayer — loud looping beep + vibration alarm.
+ *
+ * iOS suspends AudioContext after ~10s of silence. To prevent this, we play
+ * a silent keepalive tone every 3s once the timer starts, so the context
+ * stays live and the alarm fires instantly when the timer hits 0.
  */
 
 import { Capacitor } from '@capacitor/core';
 
 let audioCtx = null;
+let keepAliveInterval = null;
 let beepInterval = null;
-let vibrateInterval = null;
 let isPlaying = false;
 
 function getCtx() {
@@ -17,10 +20,24 @@ function getCtx() {
   return audioCtx;
 }
 
+/** Play a completely silent tone — just enough to keep iOS from suspending the context. */
+function playSilent() {
+  try {
+    const ctx = getCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    gain.gain.value = 0.001; // inaudible
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.05);
+  } catch (e) {}
+}
+
 function playBeep() {
   try {
     const ctx = getCtx();
-    // Three rapid high-pitched beeps
     const tones = [1100, 1100, 1100];
     tones.forEach((freq, i) => {
       const osc = ctx.createOscillator();
@@ -29,13 +46,13 @@ function playBeep() {
       gain.connect(ctx.destination);
       osc.type = 'square';
       osc.frequency.value = freq;
-      const startAt = ctx.currentTime + i * 0.22;
-      gain.gain.setValueAtTime(0, startAt);
-      gain.gain.linearRampToValueAtTime(1.0, startAt + 0.01);
-      gain.gain.setValueAtTime(1.0, startAt + 0.17);
-      gain.gain.linearRampToValueAtTime(0, startAt + 0.20);
-      osc.start(startAt);
-      osc.stop(startAt + 0.22);
+      const t = ctx.currentTime + i * 0.22;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(1.0, t + 0.01);
+      gain.gain.setValueAtTime(1.0, t + 0.17);
+      gain.gain.linearRampToValueAtTime(0, t + 0.20);
+      osc.start(t);
+      osc.stop(t + 0.22);
     });
   } catch (e) {}
 }
@@ -52,31 +69,38 @@ async function triggerHaptic() {
 }
 
 /**
- * Start the looping alarm — beep + vibrate every 800ms.
- * Call this the moment a timer hits 0.
+ * Call this when the user taps Start on a timer.
+ * Begins the silent keepalive so iOS can't suspend the audio context
+ * before the timer ends and the alarm needs to fire.
+ */
+export function unlockAudio() {
+  try {
+    const ctx = getCtx();
+    ctx.resume().then(() => {
+      playSilent();
+      // Keep the context alive every 3s
+      if (keepAliveInterval) clearInterval(keepAliveInterval);
+      keepAliveInterval = setInterval(playSilent, 3000);
+    });
+  } catch (e) {}
+}
+
+/**
+ * Start the alarm — loud beep + vibration every 800ms until stopAlarm() is called.
  */
 export function startAlarm() {
   if (isPlaying) return;
   isPlaying = true;
 
-  try {
-    const ctx = getCtx();
-    ctx.resume().then(() => {
-      playBeep();
-      triggerHaptic();
-      beepInterval = setInterval(() => {
-        playBeep();
-        triggerHaptic();
-      }, 800);
-    });
-  } catch (e) {
+  // Stop keepalive — alarm takes over
+  if (keepAliveInterval) { clearInterval(keepAliveInterval); keepAliveInterval = null; }
+
+  playBeep();
+  triggerHaptic();
+  beepInterval = setInterval(() => {
     playBeep();
     triggerHaptic();
-    beepInterval = setInterval(() => {
-      playBeep();
-      triggerHaptic();
-    }, 800);
-  }
+  }, 800);
 }
 
 /**
@@ -85,16 +109,6 @@ export function startAlarm() {
 export function stopAlarm() {
   isPlaying = false;
   if (beepInterval) { clearInterval(beepInterval); beepInterval = null; }
-  if (vibrateInterval) { clearInterval(vibrateInterval); vibrateInterval = null; }
+  if (keepAliveInterval) { clearInterval(keepAliveInterval); keepAliveInterval = null; }
   try { if (navigator.vibrate) navigator.vibrate(0); } catch (e) {}
-}
-
-/**
- * Unlock audio context on first user interaction (iOS requirement).
- */
-export function unlockAudio() {
-  try {
-    const ctx = getCtx();
-    if (ctx.state === 'suspended') ctx.resume();
-  } catch (e) {}
 }
