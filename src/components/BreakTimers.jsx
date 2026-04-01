@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTimer, formatTime, formatMinutes } from '../hooks/useTimer';
 import { startAlarm, stopAlarm, unlockAudio } from '../utils/alarmPlayer';
-import { cancelAllAlarms } from '../utils/nativeNotifications';
+import { cancelAllAlarms, startIncessantAlarm, stopIncessantAlarm } from '../utils/nativeNotifications';
 
 const BREAKS = [
   { id: 'break1', label: 'Break 1' },
@@ -84,22 +84,28 @@ function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, 
     notify
   );
 
-  // Start in-app alarm the moment timer hits overtime; stop when done/reset
+  // Start in-app alarm + incessant notifications when timer hits overtime
   const alarmActiveRef = useRef(false);
   useEffect(() => {
     if (isOvertime && isRunning && !alarmActiveRef.current) {
       alarmActiveRef.current = true;
       startAlarm();
+      startIncessantAlarm(`${label} Over`, "Time's up — tap I'm Back!");
     }
     if ((!isRunning || returnedAt) && alarmActiveRef.current) {
       alarmActiveRef.current = false;
       stopAlarm();
+      stopIncessantAlarm();
     }
-  }, [isOvertime, isRunning, returnedAt]);
+  }, [isOvertime, isRunning, returnedAt, label]);
 
   // Stop alarm on unmount just in case
   useEffect(() => () => {
-    if (alarmActiveRef.current) { stopAlarm(); alarmActiveRef.current = false; }
+    if (alarmActiveRef.current) {
+      stopAlarm();
+      stopIncessantAlarm();
+      alarmActiveRef.current = false;
+    }
   }, []);
 
   const isGrace    = isOvertime && (elapsed - activeDuration) <= GRACE_SECONDS;
