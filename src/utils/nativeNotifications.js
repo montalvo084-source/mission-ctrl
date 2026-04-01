@@ -1,64 +1,53 @@
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
-/**
- * Call once on app mount to prompt the iOS notification permission dialog.
- */
 export async function requestPermissionEagerly() {
   if (!Capacitor.isNativePlatform()) return;
   try {
     const { display } = await LocalNotifications.checkPermissions();
-    if (display !== 'granted') {
-      await LocalNotifications.requestPermissions();
-    }
+    if (display !== 'granted') await LocalNotifications.requestPermissions();
   } catch (e) {
     console.error('[Notifications] Permission request failed:', e);
   }
 }
 
-// Repeat alarm every 15 seconds for 3 minutes (12 total notifications)
-const REPEAT_COUNT = 12;
-const REPEAT_INTERVAL_SEC = 15;
+// 1 notification at end time + 5 follow-ups every 2 minutes = up to 10 min of reminders
+// 2-minute spacing is reliably delivered by iOS without suppression
+const FOLLOW_UPS = 5;
+const FOLLOW_UP_INTERVAL_SEC = 120; // 2 minutes
 
-// Each alarm occupies a block of IDs: base * 100 + 0..REPEAT_COUNT
-function burstIds(baseId) {
-  return Array.from({ length: REPEAT_COUNT }, (_, i) => ({ id: baseId * 100 + i }));
+function allIds(baseId) {
+  return Array.from({ length: FOLLOW_UPS + 1 }, (_, i) => ({ id: baseId * 10 + i }));
 }
 
 /**
- * Schedule a repeating alarm — fires every 5 seconds for 2 minutes until cancelled.
- * @param {number} id        — unique base ID (used to cancel later)
- * @param {string} title     — notification title
- * @param {string} body      — notification body
- * @param {Date}   triggerAt — exact Date when first notification fires
+ * Schedule alarm at triggerAt, then repeat every 2 min for up to 10 min.
+ * Cancels any stale notifications for this timer first.
  */
 export async function scheduleNativeAlarm(id, title, body, triggerAt) {
   if (!Capacitor.isNativePlatform()) return;
   try {
-    // Always cancel any stale notifications for this ID first (e.g. leftover from test mode)
-    await LocalNotifications.cancel({ notifications: burstIds(id) });
+    // Clear any stale notifications for this timer
+    await LocalNotifications.cancel({ notifications: allIds(id) });
 
-    const notifications = Array.from({ length: REPEAT_COUNT }, (_, i) => ({
-      id: id * 100 + i,
+    const notifications = Array.from({ length: FOLLOW_UPS + 1 }, (_, i) => ({
+      id: id * 10 + i,
       title,
-      body,
+      body: i === 0 ? body : `Still waiting — tap to open Mission Ctrl`,
       sound: 'default',
-      schedule: { at: new Date(triggerAt.getTime() + i * REPEAT_INTERVAL_SEC * 1000) },
+      schedule: { at: new Date(triggerAt.getTime() + i * FOLLOW_UP_INTERVAL_SEC * 1000) },
     }));
+
     await LocalNotifications.schedule({ notifications });
   } catch (e) {
     console.error('[Notifications] Schedule failed:', e);
   }
 }
 
-/**
- * Cancel all repeating notifications for a given alarm.
- * @param {number} id — the base ID passed to scheduleNativeAlarm
- */
 export async function cancelNativeAlarm(id) {
   if (!Capacitor.isNativePlatform()) return;
   try {
-    await LocalNotifications.cancel({ notifications: burstIds(id) });
+    await LocalNotifications.cancel({ notifications: allIds(id) });
   } catch (e) {
     console.error('[Notifications] Cancel failed:', e);
   }
