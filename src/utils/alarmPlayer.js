@@ -1,59 +1,41 @@
 /**
- * alarmPlayer — loud looping beep + vibration alarm.
- *
- * iOS suspends AudioContext after ~10s of silence. To prevent this, we play
- * a silent keepalive tone every 3s once the timer starts, so the context
- * stays live and the alarm fires instantly when the timer hits 0.
+ * alarmPlayer — plays a loud looping beep alarm using HTMLAudioElement.
+ * HTMLAudioElement is more reliable than Web Audio API in Capacitor WKWebView.
+ * Vibration via Capacitor Haptics.
  */
 
 import { Capacitor } from '@capacitor/core';
 
-let audioCtx = null;
-let keepAliveInterval = null;
+// Base64-encoded WAV — 1100Hz beep, 0.3s, generated inline (no file needed)
+const BEEP_WAV_B64 = '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';
+const BEEP_SRC = `data:audio/wav;base64,${BEEP_WAV_B64}`;
+
 let beepInterval = null;
+let vibrateInterval = null;
 let isPlaying = false;
+let audioUnlocked = false;
+const audioPool = [];
+const POOL_SIZE = 4;
 
-function getCtx() {
-  if (!audioCtx || audioCtx.state === 'closed') {
-    audioCtx = new (window.AudioContext || window['webkitAudioContext'])();
+// Pre-create Audio elements so they're ready to fire immediately
+function initPool() {
+  if (audioPool.length > 0) return;
+  for (let i = 0; i < POOL_SIZE; i++) {
+    const a = new Audio(BEEP_SRC);
+    a.volume = 1.0;
+    a.preload = 'auto';
+    audioPool.push(a);
   }
-  return audioCtx;
 }
 
-/** Play a completely silent tone — just enough to keep iOS from suspending the context. */
-function playSilent() {
-  try {
-    const ctx = getCtx();
-    if (ctx.state === 'suspended') ctx.resume();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    gain.gain.value = 0.001; // inaudible
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.05);
-  } catch (e) {}
-}
-
+let poolIdx = 0;
 function playBeep() {
   try {
-    const ctx = getCtx();
-    const tones = [1100, 1100, 1100];
-    tones.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.type = 'square';
-      osc.frequency.value = freq;
-      const t = ctx.currentTime + i * 0.22;
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(1.0, t + 0.01);
-      gain.gain.setValueAtTime(1.0, t + 0.17);
-      gain.gain.linearRampToValueAtTime(0, t + 0.20);
-      osc.start(t);
-      osc.stop(t + 0.22);
-    });
+    initPool();
+    const a = audioPool[poolIdx % POOL_SIZE];
+    poolIdx++;
+    a.currentTime = 0;
+    a.play().catch(() => {});
   } catch (e) {}
 }
 
@@ -69,32 +51,31 @@ async function triggerHaptic() {
 }
 
 /**
- * Call this when the user taps Start on a timer.
- * Begins the silent keepalive so iOS can't suspend the audio context
- * before the timer ends and the alarm needs to fire.
+ * Call when user taps Start — pre-loads audio and unlocks playback on iOS.
  */
 export function unlockAudio() {
+  if (audioUnlocked) return;
   try {
-    const ctx = getCtx();
-    ctx.resume().then(() => {
-      playSilent();
-      // Keep the context alive every 3s
-      if (keepAliveInterval) clearInterval(keepAliveInterval);
-      keepAliveInterval = setInterval(playSilent, 3000);
+    initPool();
+    // Play silent audio to unlock iOS
+    audioPool.forEach(a => {
+      a.volume = 0;
+      a.play().then(() => {
+        a.pause();
+        a.currentTime = 0;
+        a.volume = 1.0;
+      }).catch(() => {});
     });
+    audioUnlocked = true;
   } catch (e) {}
 }
 
 /**
- * Start the alarm — loud beep + vibration every 800ms until stopAlarm() is called.
+ * Start the alarm — loud beep + vibration every 800ms.
  */
 export function startAlarm() {
   if (isPlaying) return;
   isPlaying = true;
-
-  // Stop keepalive — alarm takes over
-  if (keepAliveInterval) { clearInterval(keepAliveInterval); keepAliveInterval = null; }
-
   playBeep();
   triggerHaptic();
   beepInterval = setInterval(() => {
@@ -104,11 +85,10 @@ export function startAlarm() {
 }
 
 /**
- * Stop the alarm. Call when user taps "I'm Back" or "Reset".
+ * Stop the alarm.
  */
 export function stopAlarm() {
   isPlaying = false;
   if (beepInterval) { clearInterval(beepInterval); beepInterval = null; }
-  if (keepAliveInterval) { clearInterval(keepAliveInterval); keepAliveInterval = null; }
   try { if (navigator.vibrate) navigator.vibrate(0); } catch (e) {}
 }
