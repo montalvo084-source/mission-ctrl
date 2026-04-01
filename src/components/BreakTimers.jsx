@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTimer, formatTime, formatMinutes } from '../hooks/useTimer';
 import { startAlarm, stopAlarm, unlockAudio } from '../utils/alarmPlayer';
+import { cancelAllAlarms } from '../utils/nativeNotifications';
 
 const BREAKS = [
   { id: 'break1', label: 'Break 1' },
@@ -141,12 +142,14 @@ function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, 
 
   function handleReturn() {
     stopAlarm();
+    cancelAllAlarms();
     alarmActiveRef.current = false;
     onReturn(id);
   }
 
   function handleReset() {
     stopAlarm();
+    cancelAllAlarms();
     alarmActiveRef.current = false;
     setTestMode(false);
     onReset(id);

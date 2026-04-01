@@ -54,3 +54,19 @@ export async function cancelNativeAlarm(id) {
     console.error('[Notifications] Cancel failed:', e);
   }
 }
+
+/**
+ * Nuclear option — cancel every single pending notification on the device.
+ * Call on I'm Back and Reset to guarantee nothing keeps firing.
+ */
+export async function cancelAllAlarms() {
+  if (!Capacitor.isNativePlatform()) return;
+  try {
+    const { notifications } = await LocalNotifications.getPending();
+    if (notifications.length > 0) {
+      await LocalNotifications.cancel({ notifications: notifications.map(n => ({ id: n.id })) });
+    }
+  } catch (e) {
+    console.error('[Notifications] Cancel all failed:', e);
+  }
+}
