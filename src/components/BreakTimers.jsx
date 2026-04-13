@@ -84,10 +84,12 @@ function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, 
     notify
   );
 
-  // Start in-app alarm + incessant notifications when timer hits overtime
+  const timerExpired = isRunning && remaining === 0;
+
+  // Start in-app alarm + incessant notifications when timer hits overtime or reaches zero
   const alarmActiveRef = useRef(false);
   useEffect(() => {
-    if (isOvertime && isRunning && !alarmActiveRef.current) {
+    if ((isOvertime || timerExpired) && isRunning && !alarmActiveRef.current) {
       alarmActiveRef.current = true;
       startAlarm();
       startIncessantAlarm(`${label} Over`, "Time's up — tap I'm Back!");
@@ -97,7 +99,7 @@ function TimerCard({ id, label, duration, breakData, xpPerOnTimeBreak, onStart, 
       stopAlarm();
       stopIncessantAlarm();
     }
-  }, [isOvertime, isRunning, returnedAt, label]);
+  }, [isOvertime, timerExpired, isRunning, returnedAt, label]);
 
   // Stop alarm on unmount just in case
   useEffect(() => () => {

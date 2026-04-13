@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTimer, formatTime, formatMinutes } from '../hooks/useTimer';
+import { startAlarm, stopAlarm, unlockAudio } from '../utils/alarmPlayer';
 
 // ─── Inline Stepper ───────────────────────────────────────────
 function Stepper({ value, onChange, min, max, step, display }) {
@@ -53,9 +54,28 @@ export function WorkTimer({ startedAt, duration, onStart, onReset, onEditDuratio
     id: 1000, title: 'Focus Session', body: 'Target reached — great work!'
   }), []);
   const { elapsed, remaining, isOvertime, isRunning } = useTimer(startedAt, activeDuration, notify);
+  const alarmActiveRef = useRef(false);
 
   // Warning at 5 min remaining (more useful than 60s for a 35-min session)
   const isWarning = isRunning && !isOvertime && remaining <= 300;
+
+  useEffect(() => {
+    if (isOvertime && isRunning && !alarmActiveRef.current) {
+      alarmActiveRef.current = true;
+      startAlarm();
+    }
+    if ((!isRunning || !isOvertime) && alarmActiveRef.current) {
+      alarmActiveRef.current = false;
+      stopAlarm();
+    }
+  }, [isOvertime, isRunning]);
+
+  useEffect(() => () => {
+    if (alarmActiveRef.current) {
+      stopAlarm();
+      alarmActiveRef.current = false;
+    }
+  }, []);
 
   let cardState = 'idle';
   if (isRunning) {
@@ -128,20 +148,20 @@ export function WorkTimer({ startedAt, duration, onStart, onReset, onEditDuratio
       {/* Action buttons */}
       {!isRunning ? (
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="timer-btn start" style={{ flex: 1 }} onClick={onStart}>
+          <button className="timer-btn start" style={{ flex: 1 }} onClick={() => { unlockAudio(); onStart(); }}>
             ▶ Start Session
           </button>
           <button
             className="timer-reset-btn"
             style={{ fontSize: 11, padding: '0 10px' }}
-            onClick={() => { setTestMode(true); onStart(); }}
+            onClick={() => { unlockAudio(); setTestMode(true); onStart(); }}
             title="Test with 10 second timer"
           >
             ⚡ 10s
           </button>
         </div>
       ) : (
-        <button className="timer-reset-btn" onClick={() => { setTestMode(false); onReset(); }}>
+        <button className="timer-reset-btn" onClick={() => { stopAlarm(); setTestMode(false); onReset(); }}>
           ↺ Reset
         </button>
       )}
